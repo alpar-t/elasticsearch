@@ -67,6 +67,11 @@ public class GeoHashGridAggregatorTests extends AggregatorTestCase {
         testWithSeveralDocs(GeoHashType.GEOHASH, precision);
     }
 
+    public void testPluscodeWithSeveralDocs() throws IOException {
+        int precision = randomFrom(4, 6, 8, 10, 11, 12, 13, 14);
+        testWithSeveralDocs(GeoHashType.PLUSCODE, precision);
+    }
+
     private void testWithSeveralDocs(GeoHashType type, int precision)
             throws IOException {
         int numPoints = randomIntBetween(8, 128);
