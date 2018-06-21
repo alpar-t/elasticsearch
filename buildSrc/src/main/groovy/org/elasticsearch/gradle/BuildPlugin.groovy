@@ -18,7 +18,6 @@
  */
 package org.elasticsearch.gradle
 
-import com.carrotsearch.gradle.junit4.RandomizedTestingTask
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import org.apache.commons.io.IOUtils
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -49,6 +48,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.GroovyCompile
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.api.tasks.testing.Test
 import org.gradle.internal.jvm.Jvm
 import org.gradle.process.ExecResult
 import org.gradle.util.GradleVersion
@@ -87,6 +87,7 @@ class BuildPlugin implements Plugin<Project> {
         project.pluginManager.apply('nebula.info-java')
         project.pluginManager.apply('nebula.info-scm')
         project.pluginManager.apply('nebula.info-jar')
+        setupSeed(project)
 
         project.getTasks().create("buildResources", ExportElasticsearchBuildResourcesTask)
 
@@ -104,6 +105,28 @@ class BuildPlugin implements Plugin<Project> {
         configureDependenciesInfo(project)
     }
 
+<<<<<<< HEAD
+=======
+    static void setupSeed(Project project) {
+        if (project.rootProject.ext.has('testSeed')) {
+            /* Skip this if we've already pinned the testSeed. It is important
+             * that this checks the rootProject so that we know we've only ever
+             * initialized one time. */
+            return
+        }
+        String testSeed = System.getProperty('tests.seed')
+        if (testSeed == null) {
+            long seed = new Random(System.currentTimeMillis()).nextLong()
+            testSeed = Long.toUnsignedString(seed, 16).toUpperCase(Locale.ROOT)
+        }
+        /* Set the testSeed on the root project first so other projects can use
+         * it during initialization. */
+        project.rootProject.ext.testSeed = testSeed
+        project.rootProject.subprojects {
+            project.ext.testSeed = testSeed
+        }
+    }
+>>>>>>> Remove randomizedtesting plugin  #31496
 
     /** Performs checks on the build environment and prints information about the build environment. */
     static void globalBuildInfo(Project project) {
@@ -777,25 +800,37 @@ class BuildPlugin implements Plugin<Project> {
     }
 
     /** Returns a closure of common configuration shared by unit and integration tests. */
-    static Closure commonTestConfig(Project project) {
-        return {
-            jvm "${project.runtimeJavaHome}/bin/java"
-            parallelism System.getProperty('tests.jvms', 'auto')
-            ifNoTests System.getProperty('tests.ifNoTests', 'fail')
-            onNonEmptyWorkDirectory 'wipe'
-            leaveTemporary true
+    static void commonTestConfig(Test test) {
+        Project project = test.project
+        // TODO: fix this
+        test.ext.jvmArg = { String arg ->
+            test.jvmArgs += arg
+        }
+        test.configure {
+            File heapdumpDir = new File(project.buildDir, 'heapdump')
+            doFirst {
+                heapdumpDir.mkdirs()
+            }
+
+            executable = "${project.runtimeJavaHome}/bin/java"
+            maxParallelForks = Integer.parseInt(
+                    System.getProperty('tests.jvms', Runtime.getRuntime().availableProcessors().toString())
+            )
+            // TODO ifNoTests System.getProperty('tests.ifNoTests', 'fail')
+            // TODO onNonEmptyWorkDirectory 'wipe'
+            // TODO leaveTemporary true
 
             // TODO: why are we not passing maxmemory to junit4?
-            jvmArg '-Xmx' + System.getProperty('tests.heap.size', '512m')
-            jvmArg '-Xms' + System.getProperty('tests.heap.size', '512m')
-            jvmArg '-XX:+HeapDumpOnOutOfMemoryError'
-            File heapdumpDir = new File(project.buildDir, 'heapdump')
-            heapdumpDir.mkdirs()
-            jvmArg '-XX:HeapDumpPath=' + heapdumpDir
+            maxHeapSize = '512m'
+            minHeapSize = '512m'
+            jvmArgs += [
+                    '-XX:+HeapDumpOnOutOfMemoryError',
+                    "-XX:HeapDumpPath=$heapdumpDir",
+            ]
             if (project.runtimeJavaVersion >= JavaVersion.VERSION_1_9) {
-                jvmArg '--illegal-access=warn'
+                jvmArgs += '--illegal-access=warn'
             }
-            argLine System.getProperty('tests.jvm.argline')
+            // TODO argLine System.getProperty('tests.jvm.argline')
 
             // we use './temp' since this is per JVM and tests are forbidden from writing to CWD
             systemProperty 'java.io.tmpdir', './temp'
@@ -837,10 +872,12 @@ class BuildPlugin implements Plugin<Project> {
                 systemProperty 'javax.net.ssl.keyStorePassword', 'password'
             }
 
-            boolean assertionsEnabled = Boolean.parseBoolean(System.getProperty('tests.asserts', 'true'))
-            enableSystemAssertions assertionsEnabled
-            enableAssertions assertionsEnabled
+            if (Boolean.parseBoolean(System.getProperty('tests.asserts', 'true'))) {
+                jvmArgs += ["-ea", "-esa"]
+            }
 
+            /*
+            TODO
             testLogging {
                 showNumFailuresAtEnd 25
                 slowTests {
@@ -873,6 +910,7 @@ class BuildPlugin implements Plugin<Project> {
             listeners {
                 junitReport()
             }
+            */
 
             exclude '**/*$*.class'
 
@@ -887,8 +925,10 @@ class BuildPlugin implements Plugin<Project> {
 
     /** Configures the test task */
     static Task configureTest(Project project) {
-        RandomizedTestingTask test = project.tasks.getByName('test')
-        test.configure(commonTestConfig(project))
+        Test test = project.tasks.getByName('test')
+        project.tasks.withType(Test) {
+            commonTestConfig(it)
+        }
         test.configure {
             include '**/*Tests.class'
         }
@@ -896,7 +936,7 @@ class BuildPlugin implements Plugin<Project> {
         // Add a method to create additional unit tests for a project, which will share the same
         // randomized testing setup, but by default run no tests.
         project.extensions.add('additionalTest', { String name, Closure config ->
-            RandomizedTestingTask additionalTest = project.tasks.create(name, RandomizedTestingTask.class)
+            Test additionalTest = project.tasks.create(name, Test.class)
             additionalTest.classpath = test.classpath
             additionalTest.testClassesDirs = test.testClassesDirs
             additionalTest.configure(commonTestConfig(project))

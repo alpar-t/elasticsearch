@@ -255,7 +255,11 @@ if (fixtureSupported) {
   integTestRunner.systemProperty 'tests.rest.suite', 'hdfs_repository'
 
   // Only include the HA integration tests for the HA test task
-  integTestHaRunner.patternSet.setIncludes(['**/Ha*TestSuiteIT.class'])
+  integTestHaRunner {
+    // TODO: check this
+    exclude '**/*'
+    include '**/Ha*TestSuiteIT.class'
+  }
 } else {
   if (legalPath) {
     logger.warn("hdfsFixture unsupported, please set HADOOP_HOME and put HADOOP_HOME\\bin in PATH")
@@ -296,7 +300,11 @@ if (secureFixtureSupported) {
   integTestSecureRunner.exclude('**/Ha*TestSuiteIT.class')
 
   // Only include the HA integration tests for the HA test task
-  integTestSecureHaRunner.patternSet.setIncludes(['**/Ha*TestSuiteIT.class'])
+  integTestSecureHaRunner {
+    // TODO: check this
+    exclude '**/*'
+    include '**/Ha*TestSuiteIT.class'
+  }
 } else {
   // Security tests unsupported. Don't run these tests.
   integTestSecure.enabled = false

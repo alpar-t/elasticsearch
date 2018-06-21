@@ -20,7 +20,6 @@
 
 package org.elasticsearch.gradle.test
 
-import com.carrotsearch.gradle.junit4.RandomizedTestingPlugin
 import org.elasticsearch.gradle.BuildPlugin
 import org.elasticsearch.gradle.ExportElasticsearchBuildResourcesTask
 import org.elasticsearch.gradle.VersionProperties
@@ -45,7 +44,6 @@ public class StandaloneRestTestPlugin implements Plugin<Project> {
                 + 'are mutually exclusive')
         }
         project.pluginManager.apply(JavaBasePlugin)
-        project.pluginManager.apply(RandomizedTestingPlugin)
 
         project.getTasks().create("buildResources", ExportElasticsearchBuildResourcesTask)
         BuildPlugin.globalBuildInfo(project)

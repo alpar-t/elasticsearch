@@ -19,12 +19,12 @@
 
 package org.elasticsearch.gradle.test
 
-import com.carrotsearch.gradle.junit4.RandomizedTestingTask
 import org.elasticsearch.gradle.BuildPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
 
 /**
  * Configures the build to compile against Elasticsearch's test framework and
@@ -38,13 +38,15 @@ public class StandaloneTestPlugin implements Plugin<Project> {
 
         Map testOptions = [
             name: 'test',
-            type: RandomizedTestingTask,
+            type: Test,
             dependsOn: 'testClasses',
             group: JavaBasePlugin.VERIFICATION_GROUP,
             description: 'Runs unit tests that are separate'
         ]
-        RandomizedTestingTask test = project.tasks.create(testOptions)
-        test.configure(BuildPlugin.commonTestConfig(project))
+        Test test = project.tasks.create(testOptions)
+        project.tasks.withType(Test) {
+            BuildPlugin.commonTestConfig(it)
+        }
         BuildPlugin.configureCompile(project)
         test.classpath = project.sourceSets.test.runtimeClasspath
         test.testClassesDirs = project.sourceSets.test.output.classesDirs

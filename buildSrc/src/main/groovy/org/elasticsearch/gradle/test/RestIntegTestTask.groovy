@@ -18,7 +18,6 @@
  */
 package org.elasticsearch.gradle.test
 
-import com.carrotsearch.gradle.junit4.RandomizedTestingTask
 import org.elasticsearch.gradle.BuildPlugin
 import org.elasticsearch.gradle.VersionProperties
 import org.gradle.api.DefaultTask
@@ -32,19 +31,20 @@ import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskState
 import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.api.tasks.testing.Test
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.stream.Stream
 
-/**
+/**RandomizedTestingTask
  * A wrapper task around setting up a cluster and running rest tests.
  */
 public class RestIntegTestTask extends DefaultTask {
 
     protected ClusterConfiguration clusterConfig
 
-    protected RandomizedTestingTask runner
+    protected Test runner
 
     protected Task clusterInit
 
@@ -56,7 +56,7 @@ public class RestIntegTestTask extends DefaultTask {
     Property<Boolean> includePackaged = project.objects.property(Boolean)
 
     public RestIntegTestTask() {
-        runner = project.tasks.create("${name}Runner", RandomizedTestingTask.class)
+        runner = project.tasks.create("${name}Runner", Test.class)
         super.dependsOn(runner)
         clusterInit = project.tasks.create(name: "${name}Cluster#init", dependsOn: project.testClasses)
         runner.dependsOn(clusterInit)
@@ -64,10 +64,8 @@ public class RestIntegTestTask extends DefaultTask {
         runner.testClassesDirs = project.sourceSets.test.output.classesDirs
         clusterConfig = project.extensions.create("${name}Cluster", ClusterConfiguration.class, project)
 
-        // start with the common test configuration
-        runner.configure(BuildPlugin.commonTestConfig(project))
         // override/add more for rest tests
-        runner.parallelism = '1'
+        runner.maxParallelForks = '1'
         runner.include('**/*IT.class')
         runner.systemProperty('tests.rest.load_packaged', 'false')
 
