@@ -169,6 +169,10 @@ public class JarHell {
                 output.accept("excluding system resource: " + path);
                 continue;
             }
+            // TODO: why is this needed only when running with Gradle? Should we do it from the build script ?
+            if(Files.exists(path) == false) {
+                continue;
+            }
             if (path.toString().endsWith(".jar")) {
                 if (!seenJars.add(path)) {
                     throw new IllegalStateException("jar hell!" + System.lineSeparator() +
