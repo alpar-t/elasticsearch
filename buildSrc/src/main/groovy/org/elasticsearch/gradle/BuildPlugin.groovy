@@ -105,8 +105,6 @@ class BuildPlugin implements Plugin<Project> {
         configureDependenciesInfo(project)
     }
 
-<<<<<<< HEAD
-=======
     static void setupSeed(Project project) {
         if (project.rootProject.ext.has('testSeed')) {
             /* Skip this if we've already pinned the testSeed. It is important
@@ -126,7 +124,6 @@ class BuildPlugin implements Plugin<Project> {
             project.ext.testSeed = testSeed
         }
     }
->>>>>>> Remove randomizedtesting plugin  #31496
 
     /** Performs checks on the build environment and prints information about the build environment. */
     static void globalBuildInfo(Project project) {
@@ -846,6 +843,8 @@ class BuildPlugin implements Plugin<Project> {
             } else {
                 systemProperty 'runtime.java', project.ext.runtimeJavaVersion.getMajorVersion()
             }
+            // TODO: equivalent for idea
+            systemProperty "gradle.user.home", project.gradle.gradleUserHomeDir
             // TODO: remove setting logging level via system property
             systemProperty 'tests.logger.level', 'WARN'
             for (Map.Entry<String, String> property : System.properties.entrySet()) {
