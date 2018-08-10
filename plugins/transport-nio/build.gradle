@@ -26,7 +26,7 @@ compileJava.options.compilerArgs << "-Xlint:-try"
 compileTestJava.options.compilerArgs << "-Xlint:-rawtypes,-unchecked"
 
 dependencies {
-    compile "org.elasticsearch:elasticsearch-nio:${version}"
+    compileOnly "org.elasticsearch:elasticsearch-nio:${version}"
 
     // network stack
     compile "io.netty:netty-buffer:4.1.28.Final"
