@@ -78,7 +78,6 @@ class BuildPlugin implements Plugin<Project> {
             )
         }
         project.pluginManager.apply('java')
-        project.pluginManager.apply('carrotsearch.randomized-testing')
         configureConfigurations(project)
         configureJars(project) // jar config must be added before info broker
         // these plugins add lots of info to our jars
@@ -803,6 +802,9 @@ class BuildPlugin implements Plugin<Project> {
         test.ext.jvmArg = { String arg ->
             test.jvmArgs += arg
         }
+        test.useJUnitPlatform {
+            includeEngines 'junit-vintage'
+        }
         test.configure {
             File heapdumpDir = new File(project.buildDir, 'heapdump')
             doFirst {
@@ -813,6 +815,7 @@ class BuildPlugin implements Plugin<Project> {
             maxParallelForks = Integer.parseInt(
                     System.getProperty('tests.jvms', Runtime.getRuntime().availableProcessors().toString())
             )
+
             // TODO ifNoTests System.getProperty('tests.ifNoTests', 'fail')
             // TODO onNonEmptyWorkDirectory 'wipe'
             // TODO leaveTemporary true
@@ -938,7 +941,6 @@ class BuildPlugin implements Plugin<Project> {
             Test additionalTest = project.tasks.create(name, Test.class)
             additionalTest.classpath = test.classpath
             additionalTest.testClassesDirs = test.testClassesDirs
-            additionalTest.configure(commonTestConfig(project))
             additionalTest.configure(config)
             additionalTest.dependsOn(project.tasks.testClasses)
             project.check.dependsOn(additionalTest)

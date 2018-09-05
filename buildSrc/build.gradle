@@ -107,6 +107,7 @@ dependencies {
   compile "org.elasticsearch:jna:4.5.1"
   compile 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
   testCompile "junit:junit:${props.getProperty('junit')}"
+  testRuntime 'org.junit.vintage:junit-vintage-engine:5.3.0'
 }
 
 

@@ -78,6 +78,9 @@ dependencies {
 
   compileOnly project(':libs:plugin-classloader')
   testRuntime project(':libs:plugin-classloader')
+  testRuntime ('org.junit.vintage:junit-vintage-engine:5.3.0') {
+      exclude group: 'org.hamcrest', module:'hamcrest-core'
+  }
 
   // lucene
   compile "org.apache.lucene:lucene-core:${versions.lucene}"
