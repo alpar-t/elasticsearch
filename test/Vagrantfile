@@ -1,0 +1,20 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "google/gce"
+
+  config.vm.provider :google do |google, override|
+    google.google_project_id = "elastic-ci-dev"
+    google.google_client_email = "atorok-vagrant-test@elastic-ci-dev.iam.gserviceaccount.com"
+    google.google_json_key_location = "~/.ssh/google-vagrant-test.json"
+    
+    google.network = "jenkins"
+    google.subnetwork = "jenkins"
+    google.tags = [ "vagrant", "dev" ]
+
+    google.image_family = 'elastic-foundation-ubuntu-1604-lts'
+    google.image_project_id = "elastic-images-qa"
+    
+    override.ssh.username = "atorok"
+    override.ssh.private_key_path = "~/.ssh/id_rsa_elastic"
+  end
+
+end
