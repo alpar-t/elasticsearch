@@ -29,6 +29,7 @@ import static org.junit.Assert.assertNull;
 public class TestClustersPluginIT extends GradleIntegrationTestCase {
 
     public void testListClusters() {
+        fail(); // TODO: add the new tests from the closed PR
         BuildResult result = GradleRunner.create()
             .withProjectDir(getProjectDir("testclusters"))
             .withArguments("listElasticSearchClusters", "-s")
