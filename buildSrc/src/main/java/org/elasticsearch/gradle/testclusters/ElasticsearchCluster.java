@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 public class ElasticsearchCluster implements TestClusterConfiguration {
 
     private static final Logger LOGGER = Logging.getLogger(ElasticsearchNode.class);
-    private static final int CLUSTER_UP_TIMEOUT = 40;
+    private static final int CLUSTER_UP_TIMEOUT = 20;
     private static final TimeUnit CLUSTER_UP_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
     private final AtomicBoolean configurationFrozen = new AtomicBoolean(false);
@@ -61,6 +61,10 @@ public class ElasticsearchCluster implements TestClusterConfiguration {
     private final File artifactsExtractDir;
     private final LinkedHashMap<String, Predicate<TestClusterConfiguration>> waitConditions = new LinkedHashMap<>();
     private final GradleServicesAdapter services;
+    // We have a rate limiting mechanism to make sure we don't have too many nodes running at the same time in the build
+    // We use this flag to signal when the cluster is actually started and we should start the counter and wait for it
+    // to come online. We just block if sufficient resources are not available.
+    private final AtomicBoolean shouldWait = new AtomicBoolean(false);
 
     public ElasticsearchCluster(String path, String clusterName, Project project, File artifactsExtractDir, File workingDirBase) {
         this.path = path;
@@ -233,6 +237,10 @@ public class ElasticsearchCluster implements TestClusterConfiguration {
             }
             node.start();
         }
+        synchronized (shouldWait) {
+            shouldWait.set(true);
+            shouldWait.notifyAll();
+        }
     }
 
     @Override
@@ -286,14 +294,24 @@ public class ElasticsearchCluster implements TestClusterConfiguration {
     }
 
     public void waitForAllConditions() {
-        long startedAt = System.currentTimeMillis();
+        LOGGER.info("Blocking until cluster is actually started (timeout counter not started)");
+        while (! shouldWait.get()) {
+            synchronized (shouldWait) {
+                try {
+                    shouldWait.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new TestClustersException("Thread was interrupted while waiting for cluster", e);
+                }
+            }
+        }
         LOGGER.info("Waiting for nodes");
         nodes.forEach(ElasticsearchNode::waitForAllConditions);
 
         writeUnicastHostsFiles();
 
         LOGGER.info("Starting to wait for cluster to form");
-        waitForConditions(waitConditions, startedAt, CLUSTER_UP_TIMEOUT, CLUSTER_UP_TIMEOUT_UNIT, this);
+        waitForConditions(waitConditions, System.currentTimeMillis(), CLUSTER_UP_TIMEOUT, CLUSTER_UP_TIMEOUT_UNIT, this);
     }
 
     @Override
