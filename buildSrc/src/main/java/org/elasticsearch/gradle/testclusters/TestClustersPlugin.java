@@ -74,6 +74,8 @@ public class TestClustersPlugin implements Plugin<Project> {
         // enable the DSL to describe clusters
         NamedDomainObjectContainer<ElasticsearchCluster> container = createTestClustersContainerExtension(project);
 
+        TestClustersCleanupExtension.createExtension(project);
+
         // provide a task to be able to list defined clusters.
         createListClustersTask(project, container);
 
@@ -193,19 +195,15 @@ public class TestClustersPlugin implements Plugin<Project> {
                         .filter(cluster -> runningClusters.contains(cluster) == false)
                         .collect(Collectors.toList());
 
-                    if (neededButNotRunning.isEmpty() == false) {
-                        int totalNodesForTask = neededButNotRunning.stream()
-                            .map(cluster -> cluster.getNumberOfNodes())
-                            .reduce(Integer::sum).get();
-                        TestClustersRateLimitExtension.withPermits(project, totalNodesForTask,  () -> {
-                            neededButNotRunning
-                                .forEach(elasticsearchCluster -> {
-                                    elasticsearchCluster.start();
-                                    runningClusters.add(elasticsearchCluster);
-                                });
-                            return neededButNotRunning;
+                    project.getRootProject().getExtensions()
+                        .getByType(TestClustersCleanupExtension.class)
+                        .getCleanupThread()
+                        .watch(neededButNotRunning);
+                    neededButNotRunning
+                        .forEach(elasticsearchCluster -> {
+                            elasticsearchCluster.start();
+                            runningClusters.add(elasticsearchCluster);
                         });
-                    }
                 }
                 @Override
                 public void afterActions(Task task) {}
@@ -249,10 +247,11 @@ public class TestClustersPlugin implements Plugin<Project> {
                             stopCluster(cluster, false);
                             runningClusters.remove(cluster);
                         });
-                        permitsToRelease = stoppingClusers.stream()
-                            .map(cluster -> cluster.getNumberOfNodes())
-                            .reduce(Integer::sum).orElse(0);
-                        TestClustersRateLimitExtension.releasePermits(project, permitsToRelease, () -> stoppingClusers);
+
+                        project.getRootProject().getExtensions()
+                            .getByType(TestClustersCleanupExtension.class)
+                            .getCleanupThread()
+                            .unWatch(stoppingClusers);
                     }
                 }
                 @Override
