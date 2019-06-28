@@ -1,7 +1,4 @@
 setup:
-   skip:
-        version: "all"
-        reason: "AwaitsFix https://scans.gradle.com/s/esgnq5imttajk/tests/fcijb24gqtmnc-33mbe76lzqne4?openStackTraces=WzBd"
   - do:
       indices.create:
         index: airline-data
