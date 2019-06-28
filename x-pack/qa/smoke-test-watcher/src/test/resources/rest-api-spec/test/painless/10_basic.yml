@@ -123,6 +123,9 @@
 
 ---
 "Test execute watch api with rest_total_hits_as_int":
+  - skip:
+      version: "all"
+      reason: "AwaitsFix https://scans.gradle.com/s/7lzdined4ayn6/tests/6ej7h6toy4af6-wy2m34dle6csg"
   - do:
       cluster.health:
         wait_for_status: green
