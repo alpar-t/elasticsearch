@@ -7,7 +7,6 @@ package org.elasticsearch.smoketest;
 
 import com.carrotsearch.randomizedtesting.annotations.Name;
 import com.carrotsearch.randomizedtesting.annotations.ParametersFactory;
-import org.apache.lucene.util.LuceneTestCase;
 import org.elasticsearch.test.rest.yaml.ClientYamlTestCandidate;
 import org.elasticsearch.test.rest.yaml.ClientYamlTestResponse;
 import org.elasticsearch.test.rest.yaml.ESClientYamlSuiteTestCase;
@@ -21,7 +20,6 @@ import static java.util.Collections.singletonMap;
 import static org.hamcrest.Matchers.is;
 
 /** Runs rest tests against external cluster */
-@LuceneTestCase.AwaitsFix(bugUrl = "https://scans.gradle.com/s/m44sa6oyftyue/tests/6ej7h6toy4af6-6g5rmtb4agtbo")
 public class WatcherRestIT extends ESClientYamlSuiteTestCase {
 
     public WatcherRestIT(@Name("yaml") ClientYamlTestCandidate testCandidate) {
