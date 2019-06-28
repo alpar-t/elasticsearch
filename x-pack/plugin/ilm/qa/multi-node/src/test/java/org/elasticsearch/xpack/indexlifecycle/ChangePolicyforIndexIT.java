@@ -52,6 +52,7 @@ public class ChangePolicyforIndexIT extends ESRestTestCase {
      * settings from the second policy are set ont he index (proving the second
      * policy was used for the warm phase)
      */
+    @AwaitsFix(bugUrl = "https://scans.gradle.com/s/ccf6d7zzvabza/tests/ao2nxxbijves6-ho2ugpyqq2yy2?openStackTraces=WzBd")
     public void testChangePolicyForIndex() throws Exception {
         String indexName = "test-000001";
         // create policy_1 and policy_2

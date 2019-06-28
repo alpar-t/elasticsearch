@@ -30,6 +30,7 @@ public class DataFrameUsageIT extends DataFrameRestTestCase {
         createReviewsIndex();
     }
 
+    @AwaitsFix(bugUrl = "https://scans.gradle.com/s/wd3rdn4osq2f2/tests/k6rl7j7rmqguu-7q6km3u5cknic")
     public void testUsage() throws Exception {
         Response usageResponse = client().performRequest(new Request("GET", "_xpack/usage"));
 
