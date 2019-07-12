@@ -213,9 +213,6 @@ if (project != rootProject) {
   }
   check.dependsOn(integTest)
 
-  // TODO: re-enable once randomizedtesting gradle code is published and removed from here
-  licenseHeaders.enabled = false
-
   forbiddenPatterns {
     exclude '**/*.wav'
     exclude '**/*.p12'
