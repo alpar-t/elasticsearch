@@ -190,12 +190,6 @@ task verifyVersions {
           .collect { Version.fromString(it) }
       )
     }
-    String ciYml = file(".ci/bwcVersions").text
-    bwcVersions.indexCompatible.each {
-      if (ciYml.contains("\"$it\"\n") == false) {
-        throw new Exception(".ci/bwcVersions is outdated, run `./gradlew updateCIBwcVersions` and check in the results");
-      }
-    }
   }
 }
 
